@@ -1,4 +1,7 @@
 {
   "name": "public_navigation",
-  "displayName": "public_navigation"
+  "displayName": "public_navigation",
+  "android": {
+    "package": "com.anonymous.public_navigation"
+  }
 }

@@ -1,4 +1,4 @@
-package com.public_navigation
+package com.anonymous.public_navigation
 
 import com.facebook.react.ReactActivity
 import com.facebook.react.ReactActivityDelegate
