@@ -7,6 +7,7 @@ import VoiceAssistant from "./screens/VoiceAssistant"
 import TrainStationsScreen from "./screens/TrainStationScreen";
 import BusStationsScreen from "./screens/BusStationScreen";
 import MetroStationsScreen from "./screens/MetroStationScreen";
+import MapScreen from "./screens/MapScreen";
 import { ApolloClient, InMemoryCache, ApolloProvider } from "@apollo/client";
 
 const client = new ApolloClient({
@@ -27,6 +28,7 @@ const App = () => {
             <Stack.Screen name="TrainStations" component={TrainStationsScreen} />
             <Stack.Screen name="BusStations" component={BusStationsScreen} />
             <Stack.Screen name="MetroStations" component={MetroStationsScreen} />
+            <Stack.Screen name="MapScreen" component={MapScreen} />
           </Stack.Navigator>
         </NavigationContainer>
     </ApolloProvider>

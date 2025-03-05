@@ -22,7 +22,6 @@ const WelcomeScreen = ({ navigation }) => {
     Tts.setDefaultLanguage("en-US");
     Tts.speak("Welcome to the Public Transport App. Press 1 to hear the features.");
   }, []);
-
   const speakFeatures = () => {
     const features = [
       "Press 1 for your current location",
