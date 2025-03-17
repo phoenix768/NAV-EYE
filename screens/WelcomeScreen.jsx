@@ -67,6 +67,7 @@ const WelcomeScreen = ({ navigation }) => {
       <Button title="Find Train Stations" onPress={() => navigation.navigate("TrainStations")} />
       <Button title="Find Bus Stations" onPress={()=>navigation.navigate("BusStations")}/>
       <Button title="Find Metro Stations" onPress={()=>navigation.navigate("MetroStations")}/>
+      <Button title="MAP" onPress={()=>navigation.navigate("MapScreen")}/>
     </View>
   );
 };

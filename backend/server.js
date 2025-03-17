@@ -32,6 +32,7 @@ const schema = buildSchema(`
   type Route {
     summary: String
     steps: [Step]
+    polyline: String!
   }
 
   type TransitStep {
@@ -54,7 +55,7 @@ const schema = buildSchema(`
     getCurrentLocation: Location
     getAddressFromCoordinates(lat: Float!, lng: Float!): String
     getNearbyStations(lat: Float!, lng: Float!, type: String!): [Place]
-    getRoute(origin: String!, destination: String!): Route
+    getRoute(originLat: Float!, originLng: Float!, destLat: Float!, destLng: Float!): Route
     getTransitRoute(origin: String!, destination: String!): TransitRoute 
   }
 `);
@@ -160,15 +161,17 @@ const root = {
   
 
   // 🛣️ Get Normal Route (No Transit)
-  getRoute: async ({ origin, destination }) => {
+  getRoute: async ({ originLat, originLng, destLat, destLng }) => {
     try {
+      const origin = `${originLat},${originLng}`;
+      const destination = `${destLat},${destLng}`;
       const response = await axios.get(
         `https://maps.googleapis.com/maps/api/directions/json?origin=${origin}&destination=${destination}&key=${process.env.GOOGLE_API_KEY}`
       );
-
+  
       const route = response.data.routes[0];
       if (!route) throw new Error("No route found");
-
+  
       return {
         summary: route.summary,
         steps: route.legs[0].steps.map((step) => ({
@@ -176,9 +179,10 @@ const root = {
           distance: step.distance.text,
           duration: step.duration.text,
         })),
+        polyline: route.overview_polyline.points, // Add polyline data
       };
     } catch (error) {
-      throw new Error("Failed to fetch directions");
+      throw new Error("Failed to fetch directions: " + error.message);
     }
   },
 

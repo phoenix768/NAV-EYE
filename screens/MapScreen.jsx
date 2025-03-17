@@ -1,58 +1,130 @@
 import React, { useEffect, useState } from "react";
-import { View, StyleSheet, ActivityIndicator } from "react-native";
+import { View, Text, ActivityIndicator, StyleSheet, Dimensions } from "react-native";
 import MapView, { Marker, Polyline } from "react-native-maps";
-import Geolocation from "react-native-geolocation-service";
+import { useQuery, gql } from "@apollo/client";
 import MapViewDirections from "react-native-maps-directions";
 
-const GOOGLE_API_KEY = "AIzaSyDsRJWDkVXFuzxx_uf_nxq8HcVsGJIIOOM"; // Replace with your API Key
+// GraphQL Queries
+const GET_CURRENT_LOCATION = gql`
+  query {
+    getCurrentLocation {
+      lat
+      lng
+      address
+    }
+  }
+`;
+
+const GET_ROUTE = gql`
+  query GetRoute($origin: String!, $destination: String!) {
+    getRoute(origin: $origin, destination: $destination) {
+      summary
+      steps {
+        instruction
+        distance
+        duration
+      }
+    }
+  }
+`;
+
+const GOOGLE_MAPS_API_KEY = "YOUR_GOOGLE_MAPS_API_KEY";
 
 const MapScreen = ({ route }) => {
-  const { destination } = route.params; // Get destination station details
-  const [userLocation, setUserLocation] = useState(null);
+  const { station } = route.params; // Get selected station
+  const { loading, error, data } = useQuery(GET_CURRENT_LOCATION);
+  const [routeData, setRouteData] = useState(null);
 
   useEffect(() => {
-    Geolocation.getCurrentPosition(
-      (position) => {
-        setUserLocation({
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
-          latitudeDelta: 0.01,
-          longitudeDelta: 0.01,
-        });
-      },
-      (error) => console.log(error),
-      { enableHighAccuracy: true }
-    );
-  }, []);
+    if (data?.getCurrentLocation) {
+      fetchRoute(data.getCurrentLocation, station);
+    }
+  }, [data]);
 
-  if (!userLocation) return <ActivityIndicator size="large" color="#0000ff" />;
+  const fetchRoute = async (origin, destination) => {
+    const response = await fetch("http://localhost:5000/graphql", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        query: `
+          query {
+            getRoute(origin: "${origin.lat},${origin.lng}", destination: "${destination.location.lat},${destination.location.lng}") {
+              summary
+              steps {
+                instruction
+                distance
+                duration
+              }
+            }
+          }
+        `,
+      }),
+    });
+    const result = await response.json();
+    setRouteData(result.data.getRoute);
+  };
+
+  if (loading) return <ActivityIndicator size="large" color="#0000ff" />;
+  if (error) return <Text>Error loading location.</Text>;
+
+  const userLocation = {
+    latitude: data.getCurrentLocation.lat,
+    longitude: data.getCurrentLocation.lng,
+  };
+
+  const stationLocation = {
+    latitude: station.location.lat,
+    longitude: station.location.lng,
+  };
 
   return (
     <View style={styles.container}>
       <MapView
         style={styles.map}
-        initialRegion={userLocation}
-        showsUserLocation={true}
+        initialRegion={{
+          latitude: userLocation.latitude,
+          longitude: userLocation.longitude,
+          latitudeDelta: 0.05,
+          longitudeDelta: 0.05,
+        }}
       >
-        <Marker coordinate={userLocation} title="Your Location" />
-        <Marker coordinate={destination} title="Destination" />
+        {/* User Marker */}
+        <Marker coordinate={userLocation} title="Your Location" pinColor="blue" />
+        
+        {/* Station Marker */}
+        <Marker coordinate={stationLocation} title={station.name} pinColor="red" />
 
-        {/* Route Line */}
-        <MapViewDirections
-          origin={userLocation}
-          destination={destination}
-          apikey={GOOGLE_API_KEY}
-          strokeWidth={5}
-          strokeColor="blue"
-        />
+        {/* Route Path */}
+        {routeData && (
+          <MapViewDirections
+            origin={userLocation}
+            destination={stationLocation}
+            apikey={GOOGLE_MAPS_API_KEY}
+            strokeWidth={4}
+            strokeColor="blue"
+          />
+        )}
       </MapView>
+
+      {/* Route Instructions */}
+      {routeData && (
+        <View style={styles.infoBox}>
+          <Text style={styles.heading}>Route Summary</Text>
+          {routeData.steps.map((step, index) => (
+            <Text key={index} style={styles.text}>{step.instruction}</Text>
+          ))}
+        </View>
+      )}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  map: { flex: 1 },
+  map: { width: Dimensions.get("window").width, height: Dimensions.get("window").height * 0.6 },
+  infoBox: { padding: 10, backgroundColor: "white" },
+  heading: { fontSize: 18, fontWeight: "bold" },
+  text: { fontSize: 14 },
 });
 
 export default MapScreen;

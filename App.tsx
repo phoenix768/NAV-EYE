@@ -8,10 +8,11 @@ import TrainStationsScreen from "./screens/TrainStationScreen";
 import BusStationsScreen from "./screens/BusStationScreen";
 import MetroStationsScreen from "./screens/MetroStationScreen";
 import MapScreen from "./screens/MapScreen";
+import NavigationScreen from "./screens/NavigationScreen";
 import { ApolloClient, InMemoryCache, ApolloProvider } from "@apollo/client";
 
 const client = new ApolloClient({
-  uri: "http://172.20.2.246:5000/graphql", // Change this to your backend URL if needed
+  uri: "http://192.168.29.254:5000/graphql", // Change this to your backend URL if needed
   cache: new InMemoryCache(),
 });
 
@@ -29,6 +30,7 @@ const App = () => {
             <Stack.Screen name="BusStations" component={BusStationsScreen} />
             <Stack.Screen name="MetroStations" component={MetroStationsScreen} />
             <Stack.Screen name="MapScreen" component={MapScreen} />
+            <Stack.Screen name="NavigationScreen" component={NavigationScreen} />
           </Stack.Navigator>
         </NavigationContainer>
     </ApolloProvider>
