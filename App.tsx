@@ -12,7 +12,7 @@ import NavigationScreen from "./screens/NavigationScreen";
 import { ApolloClient, InMemoryCache, ApolloProvider } from "@apollo/client";
 
 const client = new ApolloClient({
-  uri: "http://192.168.29.254:5000/graphql", // Change this to your backend URL if needed
+  uri: "http://172.20.50.5:5000/graphql", // Change this to your backend URL if needed
   cache: new InMemoryCache(),
 });
 
