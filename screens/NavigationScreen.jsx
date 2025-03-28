@@ -41,6 +41,10 @@ const NavigationScreen = () => {
       setSteps(data.getRoute.steps);
       speakSteps(data.getRoute.steps.slice(0, 3)); // Speak first 3 steps
     }
+  
+    return () => {
+      Tts.stop(); // Stop speaking when leaving screen
+    };
   }, [data]);
 
   const decodePolyline = (encoded) => {

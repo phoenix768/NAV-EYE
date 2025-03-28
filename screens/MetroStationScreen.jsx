@@ -2,8 +2,9 @@ import React, { useEffect, useState } from "react";
 import { View, Text, FlatList, ActivityIndicator, TouchableOpacity,StyleSheet,Button } from "react-native";
 import { gql, useQuery } from "@apollo/client";
 import Tts from "react-native-tts";
+import Voice from "@react-native-voice/voice";
+import { useNavigation } from "@react-navigation/native";
 
-// GraphQL Queries
 const GET_CURRENT_LOCATION = gql`
   query {
     getCurrentLocation {
@@ -29,20 +30,19 @@ const GET_NEARBY_STATIONS = gql`
 `;
 
 const MetroStationsScreen = () => {
+  const navigation = useNavigation();
   const [userLocation, setUserLocation] = useState(null);
-
-  // Fetch user's current location
+  const [recognizedText, setRecognizedText] = useState("");
+  
   const { data: locationData, loading: locationLoading, error: locationError } = useQuery(GET_CURRENT_LOCATION);
 
-  // Fetch nearby train stations when user's location is available
   const { data, loading, error } = useQuery(GET_NEARBY_STATIONS, {
     variables: userLocation
       ? { lat: userLocation.lat, lng: userLocation.lng, type: "subway_station" }
-      : { lat: 0, lng: 0, type: "subway_station" }, // Prevents query errors
-    skip: !userLocation, // Skips query until user location is available
+      : { lat: 0, lng: 0, type: "subway_station" },
+    skip: !userLocation,
   });
 
-  // Set user location once fetched
   useEffect(() => {
     if (locationData?.getCurrentLocation) {
       setUserLocation(locationData.getCurrentLocation);
@@ -61,8 +61,6 @@ const MetroStationsScreen = () => {
     }
 
   };
-  // Speak out train stations when data is available
-  
 
   useEffect(() => {
     return () => {
@@ -70,51 +68,40 @@ const MetroStationsScreen = () => {
     };
   }, []);
 
-  if (locationLoading) return <ActivityIndicator size="large" color="#0000ff" />;
-  if (locationError) return <Text>Error fetching current location.</Text>;
-  if (loading) return <ActivityIndicator size="large" color="#0000ff" />;
-  if (error) return <Text>Error loading train stations.</Text>;
+  if (locationLoading||loading) return <ActivityIndicator size="large" color="#0000ff" />;
+  if (locationError||error) return <Text>Error fetching current location.</Text>;
 
   return (
     <View style={{ flex: 1, padding: 20 }}>
-      <Button
-        title="Repeat"
-        onPress={speakstations}
-      />
-      <Text style={{ color:"#000000",fontSize: 22, fontWeight: "bold", marginBottom: 10 }}>Nearby Train Stations</Text>
+      <Button title="Repeat" onPress={speakstations} />
+      <Text style={styles.title}>Nearby Metro Stations</Text>
       
-      {data?.getNearbyStations && data.getNearbyStations.length > 0 ? (
-        <FlatList
-          data={data.getNearbyStations}
-          keyExtractor={(item, index) => index.toString()}
-          renderItem={({ item }) => (
-            <TouchableOpacity
-              style={{
-                padding: 15,
-                marginVertical: 5,
-                backgroundColor: "09122C",
-                borderRadius: 10,
-              }}
-              onPress={() => Tts.speak(`${item.name}, ${item.distance} away.`)}
-            >
-              <Text style={{color:"#000000", fontSize: 18, fontWeight: "bold" }}>{item.name}</Text>
+      <FlatList
+        data={data?.getNearbyStations || []}
+        keyExtractor={(item, index) => index.toString()}
+        renderItem={({ item }) => (
+          <View style={styles.stationContainer}>
+            <TouchableOpacity onPress={() => Tts.speak(`${item.name}, ${item.distance} away.`)}>
+              <Text style={styles.stationName}>{item.name}</Text>
               <Text style={styles.text}>{item.address}</Text>
-              <Text style={{ color:"#000000",fontWeight: "bold" }}>Distance: {item.distance}</Text>
+              <Text style={styles.text}>Distance: {item.distance}</Text>
             </TouchableOpacity>
-          )}
-        />
-      ) : (
-        <Text style={styles.text}>No nearby metro or subway stations found.</Text>
-      )}
+            <Button
+              title="Navigate"
+              onPress={() => navigation.navigate("NavigationScreen", { station: item, userLocation })}
+            />
+          </View>
+        )}
+      />
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  text:{
-    color:"#000000"
-  }
-
-})
+  title: { color: "#000", fontSize: 22, fontWeight: "bold", marginBottom: 10 },
+  stationContainer: { padding: 15, marginVertical: 5, backgroundColor: "#F0F0F0", borderRadius: 10 },
+  stationName: { color: "#000", fontSize: 18, fontWeight: "bold" },
+  text: { color: "#000" },
+});
 
 export default MetroStationsScreen;

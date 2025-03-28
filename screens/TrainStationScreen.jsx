@@ -2,9 +2,9 @@ import React, { useEffect, useState } from "react";
 import { View, Text, FlatList, ActivityIndicator, TouchableOpacity, StyleSheet, Button } from "react-native";
 import { gql, useQuery } from "@apollo/client";
 import Tts from "react-native-tts";
+import Voice from "@react-native-voice/voice";
 import { useNavigation } from "@react-navigation/native";
 
-// GraphQL Queries
 const GET_CURRENT_LOCATION = gql`
   query {
     getCurrentLocation {
@@ -32,7 +32,8 @@ const GET_NEARBY_STATIONS = gql`
 const TrainStationsScreen = () => {
   const navigation = useNavigation();
   const [userLocation, setUserLocation] = useState(null);
-
+  const [recognizedText, setRecognizedText] = useState("");
+  
   const { data: locationData, loading: locationLoading, error: locationError } = useQuery(GET_CURRENT_LOCATION);
 
   const { data, loading, error } = useQuery(GET_NEARBY_STATIONS, {
@@ -59,6 +60,48 @@ const TrainStationsScreen = () => {
     }
   };
 
+  const startListening = async () => {
+    try {
+      await Voice.start("en-US");
+    } catch (error) {
+      console.error("Voice recognition error:", error);
+    }
+  };
+
+  useEffect(() => {
+    Voice.onSpeechResults = (event) => {
+      Voice.destroy().then(Voice.removeAllListeners);
+      setRecognizedText(event.value[0]);
+      navigateToStation(event.value[0]);
+    };
+  
+    return () => {http://localhost:3000/trains/stationLive?code=LOT
+      Voice.stop();
+      Voice.destroy().then(Voice.removeAllListeners);
+    };
+  }, []);  
+
+  const navigateToStation = (spokenText) => {
+    if (!data?.getNearbyStations || data.getNearbyStations.length === 0) {
+      Tts.speak("No stations found.");
+      return;
+    }
+  
+    const spokenLower = spokenText.toLowerCase();
+    const match = spokenLower.match(/station (\d+)/); // Extract number
+  
+    if (match) {
+      const stationIndex = parseInt(match[1], 10) - 1; // Convert "Station X" to index
+      if (stationIndex >= 0 && stationIndex < data.getNearbyStations.length) {
+        const station = data.getNearbyStations[stationIndex];
+        navigation.navigate("NavigationScreen", { station, userLocation });
+        return;
+      }
+    }
+  
+    Tts.speak("Station not found. Please say Station followed by a number.");
+  };
+
   useEffect(() => {
     return () => {
       Tts.stop();
@@ -71,6 +114,7 @@ const TrainStationsScreen = () => {
   return (
     <View style={{ flex: 1, padding: 20 }}>
       <Button title="Repeat" onPress={speakStations} />
+      <Button title="Voice Command" onPress={startListening} />
       <Text style={styles.title}>Nearby Train Stations</Text>
       <FlatList
         data={data?.getNearbyStations || []}
