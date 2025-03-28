@@ -1,19 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, FlatList, ActivityIndicator, TouchableOpacity,StyleSheet,Button } from "react-native";
-import { gql, useQuery } from "@apollo/client";
+import { View, Text, FlatList, ActivityIndicator, TouchableOpacity, StyleSheet, Button, Platform, PermissionsAndroid } from "react-native";
+import Geolocation from "@react-native-community/geolocation";
+import { gql, useLazyQuery } from "@apollo/client";
 import Tts from "react-native-tts";
 import Voice from "@react-native-voice/voice";
 import { useNavigation } from "@react-navigation/native";
-
-const GET_CURRENT_LOCATION = gql`
-  query {
-    getCurrentLocation {
-      lat
-      lng
-      address
-    }
-  }
-`;
 
 const GET_NEARBY_STATIONS = gql`
   query GetNearbyStations($lat: Float!, $lng: Float!, $type: String!) {
@@ -29,26 +20,46 @@ const GET_NEARBY_STATIONS = gql`
   }
 `;
 
+
 const BusStationsScreen = () => {
   const navigation = useNavigation();
   const [userLocation, setUserLocation] = useState(null);
   const [recognizedText, setRecognizedText] = useState("");
 
-  const { data: locationData, loading: locationLoading, error: locationError } = useQuery(GET_CURRENT_LOCATION);
-
-  const { data, loading, error } = useQuery(GET_NEARBY_STATIONS, {
-    variables: userLocation
-      ? { lat: userLocation.lat, lng: userLocation.lng, type: "bus_station" }
-      : { lat: 0, lng: 0, type: "bus_station" },
-    skip: !userLocation,
+  const [getNearbyStations, { data, loading, error }] = useLazyQuery(GET_NEARBY_STATIONS, {
+    fetchPolicy: "network-only",
   });
 
-  useEffect(() => {
-    if (locationData?.getCurrentLocation) {
-      setUserLocation(locationData.getCurrentLocation);
+  const requestLocationPermission = async () => {
+    if (Platform.OS === "android") {
+      const granted = await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION);
+      return granted === PermissionsAndroid.RESULTS.GRANTED;
     }
-  }, [locationData]);
+    return true;
+  };
 
+  useEffect(() => {
+    const fetchLocation = async () => {
+      const hasPermission = await requestLocationPermission();
+      if (!hasPermission) {
+        console.log("Location permission denied");
+        return;
+      }
+
+      Geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          setUserLocation({ lat: latitude, lng: longitude });
+          getNearbyStations({ variables: { lat: latitude, lng: longitude, type: "bus_station" } });
+          console.log("User Location:", latitude, longitude);
+        },
+        (error) => console.error("Geolocation Error:", error.message),
+        { enableHighAccuracy: true, timeout: 20000 }
+      );
+    };
+
+    fetchLocation();
+  }, []);
 
   const speakstations=() => {
     if (data?.getNearbyStations?.length > 0) {
@@ -59,7 +70,6 @@ const BusStationsScreen = () => {
     } else if (data && data.getNearbyStations.length === 0) {
       Tts.speak("No nearby bus stations found.");
     }
-
   };
   
 
@@ -69,8 +79,9 @@ const BusStationsScreen = () => {
     };
   }, []);
 
-  if (locationLoading||loading) return <ActivityIndicator size="large" color="#0000ff" />;
-  if (locationError||error) return <Text>Error fetching current location.</Text>;
+  if (loading) return <ActivityIndicator size="large" color="#0000ff" />;
+  if (error) return <Text>Error fetching data.</Text>;
+  
 
   return (
     <View style={{ flex: 1, padding: 20 }}>

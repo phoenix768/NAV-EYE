@@ -84,16 +84,16 @@ const root = {
   },
 
   // // 🏠 Get Address from Given Coordinates
-  // getAddressFromCoordinates: async ({ lat, lng }) => {
-  //   try {
-  //     const response = await axios.get(
-  //       `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${process.env.GOOGLE_API_KEY}`
-  //     );
-  //     return response.data.results[0]?.formatted_address || "Address not found";
-  //   } catch (error) {
-  //     throw new Error("Failed to fetch address");
-  //   }
-  // },
+  getAddressFromCoordinates: async ({ lat, lng }) => {
+    try {
+      const response = await axios.get(
+        `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${process.env.GOOGLE_API_KEY}`
+      );
+      return response.data.results[0]?.formatted_address || "Address not found";
+    } catch (error) {
+      throw new Error("Failed to fetch address");
+    }
+  },
 
   // 🚉 Get Nearby Train, Metro, or Bus Stations
  

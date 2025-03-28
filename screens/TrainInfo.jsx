@@ -45,62 +45,84 @@ const TrainInfo = () => {
   };
 
   return (
-    <ScrollView style={styles.container}>
-      <TextInput
-        placeholder="Enter Train Number"
-        value={trainNo}
-        onChangeText={setTrainNo}
-        style={styles.input}
-        keyboardType="numeric"
-      />
-      <Button title="Get Train Info" onPress={getTrainDetails} />
-
-      {trainData ? (
-        <View style={styles.infoContainer}>
-          <Text style={styles.header}>
-            🚆 {trainData.train_name} ({trainData.train_no})
-          </Text>
-          <Text style={styles.info}>🚉 From: {trainData.from_stn_name} ({trainData.from_stn_code})</Text>
-          <Text style={styles.info}>📍 Departure: {trainData.from_time}</Text>
-          <Text style={styles.info}>🚆 To: {trainData.to_stn_name} ({trainData.to_stn_code})</Text>
-          <Text style={styles.info}>📍 Arrival: {trainData.to_time}</Text>
-          <Text style={styles.info}>⏳ Travel Time: {trainData.travel_time} hrs</Text>
-        </View>
-      ) : (
-        trainData !== null && <Text style={styles.error}>❌ No data found for this train number.</Text>
-      )}
-
-      {routeData && (
-        <View style={styles.routeContainer}>
-          <Text style={styles.routeHeader}>Route Details</Text>
-          <FlatList
-            data={routeData}
-            keyExtractor={(item, index) => index.toString()}
-            renderItem={({ item }) => (
-              <View style={styles.tableRow}>
-                <Text style={styles.tableCell}>{item.source_stn_name}({item.source_stn_code})</Text>
-                <Text style={styles.tableCell}>{item.arrive}</Text>
-                <Text style={styles.tableCell}>{item.depart}</Text>
-              </View>
-            )}
+    <FlatList
+      style={styles.container}
+      contentContainerStyle={{ paddingBottom: 20 }} // Ensure last row is visible
+      ListHeaderComponent={
+        <>
+          <TextInput
+            placeholder="Enter Train Number"
+            value={trainNo}
+            onChangeText={setTrainNo}
+            style={styles.input}
+            keyboardType="numeric"
           />
+          <Button title="Get Train Info" onPress={getTrainDetails} />
+  
+          {trainData ? (
+            <View style={styles.infoContainer}>
+              <Text style={styles.header}>
+                🚆 {trainData.train_name} ({trainData.train_no})
+              </Text>
+              <Text style={styles.info}>🚉 From: {trainData.from_stn_name} ({trainData.from_stn_code})</Text>
+              <Text style={styles.info}>📍 Departure: {trainData.from_time}</Text>
+              <Text style={styles.info}>🚆 To: {trainData.to_stn_name} ({trainData.to_stn_code})</Text>
+              <Text style={styles.info}>📍 Arrival: {trainData.to_time}</Text>
+              <Text style={styles.info}>⏳ Travel Time: {trainData.travel_time} hrs</Text>
+            </View>
+          ) : (
+            trainData !== null && <Text style={styles.error}>❌ No data found for this train number.</Text>
+          )}
+  
+          {/* Table Header Row */}
+          {routeData && routeData.length > 0 && (
+            <View style={styles.tableHeader}>
+              <Text style={styles.tableHeaderCell}>Station</Text>
+              <Text style={styles.tableHeaderCell}>Arrival</Text>
+              <Text style={styles.tableHeaderCell}>Departure</Text>
+            </View>
+          )}
+        </>
+      }
+      data={routeData}
+      keyExtractor={(item, index) => index.toString()}
+      renderItem={({ item }) => (
+        <View style={styles.tableRow}>
+          <Text style={styles.tableCell}>{item.source_stn_name} ({item.source_stn_code})</Text>
+          <Text style={styles.tableCell}>{item.arrive}</Text>
+          <Text style={styles.tableCell}>{item.depart}</Text>
         </View>
       )}
-    </ScrollView>
-  );
+      ListFooterComponent={<View style={{ height: 50 }} />} // Extra space at bottom
+    />
+  );  
 };
 
 const styles = StyleSheet.create({
   container: { padding: 20 },
-  input: { borderBottomWidth: 1, marginBottom: 10, padding: 8, color:'#000000'},
+  input: { borderBottomWidth: 1, marginBottom: 10, padding: 8, color: '#000000' },
   infoContainer: { marginTop: 20, padding: 10, backgroundColor: "#f0f0f0", borderRadius: 8 },
   header: { fontSize: 18, fontWeight: "bold", color: "#000" },
   info: { fontSize: 16, color: "#0000f0" },
   error: { fontSize: 16, color: "red", marginTop: 10 },
-  routeContainer: { marginTop: 20, padding: 20, backgroundColor: "#f0f0f0", marginBottom: 20,borderRadius: 8 },
-  routeHeader: { fontSize: 18, fontWeight: "bold", textAlign: "center", color: "#333" },
+
+  tableHeader: {
+    flexDirection: "row",
+    backgroundColor: "#000000",
+    paddingVertical: 8,
+    marginTop: 15,
+  },
+  tableHeaderCell: {
+    flex: 1,
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#ffffff",
+    textAlign: "center",
+  },
+
   tableRow: { flexDirection: "row", borderBottomWidth: 1, paddingVertical: 4 },
   tableCell: { flex: 1, fontSize: 14, color: "#333", textAlign: "center" },
 });
+
 
 export default TrainInfo;

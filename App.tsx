@@ -20,34 +20,34 @@ const client = new ApolloClient({
   uri: "http://172.20.13.109:4000/graphql", // Change this to your backend URL if needed
   cache: new InMemoryCache(),
 });
-const requestLocationPermission = async () => {
-  if (Platform.OS === "android") {
-    try {
-      const granted = await PermissionsAndroid.request(
-        PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-        {
-          title: "Location Permission",
-          message: "This app needs access to your location.",
-          buttonPositive: "OK",
-        }
-      );
-      if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-        console.log("Location permission granted");
-      } else {
-        Alert.alert("Permission Denied", "Location access is required for this app.");
-      }
-    } catch (err) {
-      console.warn(err);
-    }
-  }
-};
+// const requestLocationPermission = async () => {
+//   if (Platform.OS === "android") {
+//     try {
+//       const granted = await PermissionsAndroid.request(
+//         PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+//         {
+//           title: "Location Permission",
+//           message: "This app needs access to your location.",
+//           buttonPositive: "OK",
+//         }
+//       );
+//       if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+//         console.log("Location permission granted");
+//       } else {
+//         Alert.alert("Permission Denied", "Location access is required for this app.");
+//       }
+//     } catch (err) {
+//       console.warn(err);
+//     }
+//   }
+// };
 
 const Stack = createStackNavigator();
 
 const App = () => {
-  useEffect(() => {
-    requestLocationPermission();
-  }, []);
+  // useEffect(() => {
+  //   requestLocationPermission();
+  // }, []);
 
   return (
     <ApolloProvider client={client}>

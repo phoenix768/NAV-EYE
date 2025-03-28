@@ -1,19 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, FlatList, ActivityIndicator, TouchableOpacity, StyleSheet, Button } from "react-native";
-import { gql, useQuery } from "@apollo/client";
+import { View, Text, FlatList, ActivityIndicator, TouchableOpacity, StyleSheet, Button, Platform, PermissionsAndroid } from "react-native";
+import Geolocation from "@react-native-community/geolocation";
+import { gql, useLazyQuery } from "@apollo/client";
 import Tts from "react-native-tts";
 import Voice from "@react-native-voice/voice";
 import { useNavigation } from "@react-navigation/native";
-
-const GET_CURRENT_LOCATION = gql`
-  query {
-    getCurrentLocation {
-      lat
-      lng
-      address
-    }
-  }
-`;
 
 const GET_NEARBY_STATIONS = gql`
   query GetNearbyStations($lat: Float!, $lng: Float!, $type: String!) {
@@ -33,21 +24,43 @@ const TrainStationsScreen = () => {
   const navigation = useNavigation();
   const [userLocation, setUserLocation] = useState(null);
   const [recognizedText, setRecognizedText] = useState("");
-  
-  const { data: locationData, loading: locationLoading, error: locationError } = useQuery(GET_CURRENT_LOCATION);
 
-  const { data, loading, error } = useQuery(GET_NEARBY_STATIONS, {
-    variables: userLocation
-      ? { lat: userLocation.lat, lng: userLocation.lng, type: "train_station" }
-      : { lat: 0, lng: 0, type: "train_station" },
-    skip: !userLocation,
+  const [getNearbyStations, { data, loading, error }] = useLazyQuery(GET_NEARBY_STATIONS, {
+    fetchPolicy: "network-only",
   });
 
-  useEffect(() => {
-    if (locationData?.getCurrentLocation) {
-      setUserLocation(locationData.getCurrentLocation);
+  // Request location permission for Android
+  const requestLocationPermission = async () => {
+    if (Platform.OS === "android") {
+      const granted = await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION);
+      return granted === PermissionsAndroid.RESULTS.GRANTED;
     }
-  }, [locationData]);
+    return true;
+  };
+
+  // Fetch user location
+  useEffect(() => {
+    const fetchLocation = async () => {
+      const hasPermission = await requestLocationPermission();
+      if (!hasPermission) {
+        console.log("Location permission denied");
+        return;
+      }
+
+      Geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          setUserLocation({ lat: latitude, lng: longitude });
+          getNearbyStations({ variables: { lat: latitude, lng: longitude, type: "train_station" } });
+          console.log("User Location:", latitude, longitude);
+        },
+        (error) => console.error("Geolocation Error:", error.message),
+        { enableHighAccuracy: true, timeout: 20000 }
+      );
+    };
+
+    fetchLocation();
+  }, []);
 
   const speakStations = () => {
     if (data?.getNearbyStations?.length > 0) {
@@ -74,22 +87,22 @@ const TrainStationsScreen = () => {
       setRecognizedText(event.value[0]);
       navigateToStation(event.value[0]);
     };
-  
-    return () => {http://localhost:3000/trains/stationLive?code=LOT
+
+    return () => {
       Voice.stop();
       Voice.destroy().then(Voice.removeAllListeners);
     };
-  }, []);  
+  }, []);
 
   const navigateToStation = (spokenText) => {
     if (!data?.getNearbyStations || data.getNearbyStations.length === 0) {
       Tts.speak("No stations found.");
       return;
     }
-  
+
     const spokenLower = spokenText.toLowerCase();
     const match = spokenLower.match(/station (\d+)/); // Extract number
-  
+
     if (match) {
       const stationIndex = parseInt(match[1], 10) - 1; // Convert "Station X" to index
       if (stationIndex >= 0 && stationIndex < data.getNearbyStations.length) {
@@ -98,7 +111,7 @@ const TrainStationsScreen = () => {
         return;
       }
     }
-  
+
     Tts.speak("Station not found. Please say Station followed by a number.");
   };
 
@@ -108,8 +121,8 @@ const TrainStationsScreen = () => {
     };
   }, []);
 
-  if (locationLoading || loading) return <ActivityIndicator size="large" color="#0000ff" />;
-  if (locationError || error) return <Text>Error fetching data.</Text>;
+  if (loading) return <ActivityIndicator size="large" color="#0000ff" />;
+  if (error) return <Text>Error fetching data.</Text>;
 
   return (
     <View style={{ flex: 1, padding: 20 }}>
