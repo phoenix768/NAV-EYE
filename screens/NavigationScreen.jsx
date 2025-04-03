@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, ActivityIndicator, StyleSheet, Button } from "react-native";
+import { View, Text, ActivityIndicator, TouchableOpacity, StyleSheet } from "react-native";
 import MapView, { Marker, Polyline } from "react-native-maps";
-import { useRoute } from "@react-navigation/native";
+import { useRoute, useFocusEffect } from "@react-navigation/native";
 import { gql, useQuery } from "@apollo/client";
 import Tts from "react-native-tts";
+import Geolocation from '@react-native-community/geolocation'; // Import Geolocation
 
 const GET_ROUTE = gql`
   query GetRoute($originLat: Float!, $originLng: Float!, $destLat: Float!, $destLng: Float!) {
@@ -21,10 +22,9 @@ const GET_ROUTE = gql`
 const NavigationScreen = () => {
   const route = useRoute();
   const { station, userLocation } = route.params;
+  const [userLoc, setUserLoc] = useState(userLocation);
   const [decodedPolyline, setDecodedPolyline] = useState([]);
   const [steps, setSteps] = useState([]);
-
-  
 
   const { data, loading, error, refetch } = useQuery(GET_ROUTE, {
     variables: {
@@ -39,13 +39,26 @@ const NavigationScreen = () => {
     if (data?.getRoute?.polyline) {
       setDecodedPolyline(decodePolyline(data.getRoute.polyline));
       setSteps(data.getRoute.steps);
-      speakSteps(data.getRoute.steps.slice(0, 3)); // Speak first 3 steps
+      speakSteps(data.getRoute.steps.slice(0, 1)); // Speak first step
     }
-  
-    return () => {
-      Tts.stop(); // Stop speaking when leaving screen
-    };
+
+    // Automatically refresh the route every 8 seconds
+    const interval = setInterval(() => {
+      refreshRoute();
+    }, 8000);
+
+    // Clean up interval when the component unmounts
+    return () => clearInterval(interval);
   }, [data]);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      // Stop speaking when the screen is unfocused
+      return () => {
+        Tts.stop(); // Stop speech
+      };
+    }, [])
+  );
 
   const decodePolyline = (encoded) => {
     let points = [];
@@ -83,14 +96,34 @@ const NavigationScreen = () => {
     });
   };
 
+  const fetchLocation = async () => {
+    Geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        setUserLoc({ lat: latitude, lng: longitude });
+      },
+      (error) => console.error("Geolocation Error:", error.message),
+      { timeout: 20000 }
+    );
+  };
+
   const refreshRoute = async () => {
-    const newUserLocation = await getCurrentLocation(); // Implement this function to get updated location
-    await refetch({
-      originLat: newUserLocation.lat,
-      originLng: newUserLocation.lng,
-      destLat: station.location.lat,
-      destLng: station.location.lng,
-    });
+    fetchLocation();
+    // Wait for user location to be updated
+    if (userLoc) {
+      const { data: refetchedData } = await refetch({
+        originLat: userLoc.lat,
+        originLng: userLoc.lng,
+        destLat: station.location.lat,
+        destLng: station.location.lng,
+      });
+
+      if (refetchedData?.getRoute?.polyline) {
+        setDecodedPolyline(decodePolyline(refetchedData.getRoute.polyline));
+        setSteps(refetchedData.getRoute.steps);
+        speakSteps(refetchedData.getRoute.steps.slice(0, 1)); // Speak the first step
+      }
+    }
   };
 
   if (loading) return <ActivityIndicator size="large" color="#0000ff" />;
@@ -100,9 +133,15 @@ const NavigationScreen = () => {
   }
 
   return (
-    <View style={{ flex: 1 }}>
+    <View style={styles.container}>
+      {/* Refresh Route Button */}
+      <TouchableOpacity style={styles.button} onPress={refreshRoute}>
+        <Text style={styles.buttonText}>Refresh Route</Text>
+      </TouchableOpacity>
+
+      {/* Map View */}
       <MapView
-        style={{ flex: 1 }}
+        style={styles.map}
         initialRegion={{
           latitude: userLocation.lat,
           longitude: userLocation.lng,
@@ -114,9 +153,35 @@ const NavigationScreen = () => {
         <Marker coordinate={{ latitude: station.location.lat, longitude: station.location.lng }} title={station.name} />
         {decodedPolyline.length > 0 && <Polyline coordinates={decodedPolyline} strokeWidth={5} strokeColor="blue" />}
       </MapView>
-      <Button title="Refresh Route" onPress={refreshRoute} />
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#f5f5f5',
+    justifyContent: 'flex-start', // Ensure content is aligned to top
+  },
+  map: {
+    flex: 1,
+  },
+  button: {
+    backgroundColor: '#007BFF', // Blue background color
+    paddingVertical: 15, // More vertical padding for a bigger button
+    paddingHorizontal: 30, // Horizontal padding for a wider button
+    borderRadius: 30, // Rounded corners for a smooth look
+    marginTop: 20, // Space from top
+    alignSelf: 'center', // Center the button horizontally
+    width: '80%', // Adjustable width
+    elevation: 5, // Add shadow for Android
+  },
+  buttonText: {
+    color: '#fff', // White text color
+    fontSize: 18, // Larger text size
+    textAlign: 'center', // Center the text
+    fontWeight: 'bold', // Make the text bold
+  },
+});
 
 export default NavigationScreen;

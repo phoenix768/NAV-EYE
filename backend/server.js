@@ -50,10 +50,20 @@ const schema = buildSchema(`
     transitDetails: [TransitStep]
   }
 
+  type Landmark {
+    name: String
+    distance_meters: Float
+  }
+
+    type AddressDetails {
+    formatted_address: String
+    areas: [String]
+    landmarks: [Landmark]
+  }
 
   type Query {
     getCurrentLocation: Location
-    getAddressFromCoordinates(lat: Float!, lng: Float!): String
+    getAddressFromCoordinates(lat: Float!, lng: Float!): AddressDetails
     getNearbyStations(lat: Float!, lng: Float!, type: String!): [Place]
     getRoute(originLat: Float!, originLng: Float!, destLat: Float!, destLng: Float!): Route
     getTransitRoute(origin: String!, destination: String!): TransitRoute 
@@ -86,21 +96,44 @@ const root = {
   // // 🏠 Get Address from Given Coordinates
   getAddressFromCoordinates: async ({ lat, lng }) => {
     try {
+      // 🛰️ Fetch Data from Google API
       const response = await axios.get(
-        `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${process.env.GOOGLE_API_KEY}`
+        `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&extra_computations=ADDRESS_DESCRIPTORS&key=${process.env.GOOGLE_API_KEY}`
       );
-      return response.data.results[0]?.formatted_address || "Address not found";
+  
+      const data = response.data;
+  
+      // 🔹 Extract Formatted Address
+      const formattedAddress = data?.results?.[0]?.formatted_address || "Address not found";
+  
+      // 🏡 Extract Address Descriptor (Ensure it exists)
+      const addressDescriptor = data?.address_descriptor || null;
+  
+      // 🌍 Extract Areas (Check if exists)
+      const areas = addressDescriptor?.areas?.map(area => area.display_name?.text) || [];
+  
+      // 🏛️ Extract Landmarks (Check if exists)
+      const landmarks = addressDescriptor?.landmarks?.map(landmark => ({
+        name: landmark.display_name?.text || "Unknown",
+        distance_meters: landmark.straight_line_distance_meters || 0
+      })) || [];
+  
+      return {
+        formatted_address: formattedAddress,
+        areas: areas.length > 0 ? areas : ["No areas found"],
+        landmarks: landmarks.length > 0 ? landmarks : []
+      };
     } catch (error) {
-      throw new Error("Failed to fetch address");
+      console.error("Error fetching address details:", error.message);
+      throw new Error("Failed to retrieve address, areas, and landmarks");
     }
   },
-
-  // 🚉 Get Nearby Train, Metro, or Bus Stations
+      // 🚉 Get Nearby Train, Metro, or Bus Stations
  
 
   getNearbyStations: async ({ lat, lng, type }) => {
     try {
-      let radius = 7500; // Start with 5km
+      let radius = 15000; // Start with 7.5km
       const maxRadius = 100000; // Maximum limit (100km)
       let stations = [];
   

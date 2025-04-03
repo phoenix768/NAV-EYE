@@ -5,7 +5,7 @@ import { NavigationContainer} from "@react-navigation/native";
 import Geolocation from "react-native-geolocation-service";
 import { createStackNavigator } from "@react-navigation/stack";
 import WelcomeScreen from "./screens/WelcomeScreen";
-import VoiceAssistant from "./screens/VoiceAssistant"
+import VoiceInput from "./screens/VoiceAssistant"
 import TrainStationsScreen from "./screens/TrainStationScreen";
 import BusStationsScreen from "./screens/BusStationScreen";
 import MetroStationsScreen from "./screens/MetroStationScreen";
@@ -53,16 +53,16 @@ const App = () => {
     <ApolloProvider client={client}>
         <NavigationContainer>
           <Stack.Navigator initialRouteName="Welcome">
-            <Stack.Screen name="Welcome" component={WelcomeScreen} />
-            <Stack.Screen name="VoiceAssistant" component={VoiceAssistant}/>
-            <Stack.Screen name="TrainStations" component={TrainStationsScreen} />
-            <Stack.Screen name="BusStations" component={BusStationsScreen} />
-            <Stack.Screen name="MetroStations" component={MetroStationsScreen} />
-            <Stack.Screen name="MapScreen" component={MapScreen} />
-            <Stack.Screen name="NavigationScreen" component={NavigationScreen} />
-            <Stack.Screen name="TrainEnquiry" component={TrainEnquiry} />
-            <Stack.Screen name="TrainInfo" component={TrainInfo} />
-            <Stack.Screen name="TrainsBetweenStations" component={TrainsBetweenStations} />
+            <Stack.Screen name="Welcome" component={WelcomeScreen} options={{ headerShown: false }}/>
+            <Stack.Screen name="VoiceAssistant" component={VoiceInput} options={{ headerShown: false }}/>
+            <Stack.Screen name="TrainStations" component={TrainStationsScreen} options={{ headerShown: false }}/>
+            <Stack.Screen name="BusStations" component={BusStationsScreen} options={{ headerShown: false }}/>
+            <Stack.Screen name="MetroStations" component={MetroStationsScreen} options={{ headerShown: false }}/>
+            <Stack.Screen name="MapScreen" component={MapScreen} options={{ headerShown: false }}/>
+            <Stack.Screen name="NavigationScreen" component={NavigationScreen} options={{ headerShown: false }}/>
+            <Stack.Screen name="TrainEnquiry" component={TrainEnquiry} options={{ headerShown: false }}/>
+            <Stack.Screen name="TrainInfo" component={TrainInfo} options={{ headerShown: false }}/>
+            <Stack.Screen name="TrainsBetweenStations" component={TrainsBetweenStations} options={{ headerShown: false }}/>
           </Stack.Navigator>
         </NavigationContainer>
     </ApolloProvider>
