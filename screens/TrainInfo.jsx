@@ -155,7 +155,7 @@ const TrainInfo = () => {
                 onPress={startListening}
               >
                 <Text style={styles.buttonText}>
-                  {isListening ? "🎤 Listening..." : " Speak"}
+                  {isListening ? "🎤 Listening..." : " Speak train number"}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -193,11 +193,11 @@ const TrainInfo = () => {
 
               <View style={styles.actionButtons}>
                 <TouchableOpacity style={styles.actionButton} onPress={speakTrainDetails}>
-                  <Text style={styles.actionButtonText}>🔊 Speak Details</Text>
+                  <Text style={styles.actionButtonText}>Train Details</Text>
                 </TouchableOpacity>
                 
                 <TouchableOpacity style={styles.actionButton} onPress={speakRouteDetails}>
-                  <Text style={styles.actionButtonText}>🔊 Speak Route</Text>
+                  <Text style={styles.actionButtonText}>Train Route</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -289,7 +289,7 @@ const styles = StyleSheet.create({
     paddingVertical: 64,
     paddingHorizontal: 20,
     borderRadius: 10,
-    flex: 1,
+    flex: 0.3,
     marginRight: 8,
     alignItems: "center",
     justifyContent: "center",
@@ -413,7 +413,7 @@ const styles = StyleSheet.create({
     alignItems: "center"
   },
   actionButtonText: {
-    fontSize: 14,
+    fontSize: 20,
     color: "#333"
   },
   routeContainer: {

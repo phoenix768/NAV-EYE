@@ -154,52 +154,58 @@ const TrainsBetweenStations = () => {
   };
 
   // Set up voice recognition listeners
-  useEffect(() => {
-    // Initialize voice listeners
-    const onSpeechResults = (event) => {
-      const spokenText = event.value[0]?.trim();
-      if (!spokenText) return;
+  // Set up voice recognition listeners
+useEffect(() => {
+  // First destroy any existing instance when inputField changes
+  Voice.destroy().then(() => {
+    console.log("Voice destroyed before reinitializing");
+  }).catch(e => console.error("Error destroying Voice:", e));
+  
+  // Define handlers
+  const onSpeechResults = (event) => {
+    const spokenText = event.value[0]?.trim();
+    if (!spokenText) return;
 
-      if (inputField === "from") {
-        setFrom(spokenText.toUpperCase());
-        announce(`From station set to ${spokenText}.`);
-      } else if (inputField === "to") {
-        setTo(spokenText.toUpperCase());
-        announce(`To station set to ${spokenText}.`);
-      } else if (inputField === "date") {
-        const parsedDate = parseSpokenDate(spokenText);
-        if (parsedDate) {
-          setDate(parsedDate);
-          announce(`Date set to ${formatDateForSpeech(parsedDate)}.`);
-        } else {
-          announce("Sorry, I couldn't understand that date. Please try again with a format like 11 January 2025.");
-        }
+    if (inputField === "from") {
+      setFrom(spokenText.toUpperCase());
+      announce(`From station set to ${spokenText}.`);
+    } else if (inputField === "to") {
+      setTo(spokenText.toUpperCase());
+      announce(`To station set to ${spokenText}.`);
+    } else if (inputField === "date") {
+      const parsedDate = parseSpokenDate(spokenText);
+      if (parsedDate) {
+        setDate(parsedDate);
+        announce(`Date set to ${formatDateForSpeech(parsedDate)}.`);
+      } else {
+        announce("Sorry, I couldn't understand that date. Please try again with a format like 11 January 2025.");
       }
-      setIsListening(false);
-    };
+    }
+    setIsListening(false);
+  };
 
-    const onSpeechEnd = () => {
-      setIsListening(false);
-    };
+  const onSpeechEnd = () => {
+    setIsListening(false);
+  };
 
-    const onSpeechError = (error) => {
-      console.error("Speech recognition error:", error);
-      setIsListening(false);
-      announce("I couldn't hear that. Please try again.");
-    };
+  const onSpeechError = (error) => {
+    console.error("Speech recognition error:", error);
+    setIsListening(false);
+    announce("I couldn't hear that. Please try again.");
+  };
 
-    // Add listeners
-    Voice.onSpeechResults = onSpeechResults;
-    Voice.onSpeechEnd = onSpeechEnd;
-    Voice.onSpeechError = onSpeechError;
+  // Add listeners
+  Voice.onSpeechResults = onSpeechResults;
+  Voice.onSpeechEnd = onSpeechEnd;
+  Voice.onSpeechError = onSpeechError;
 
-    // Clean up
-    return () => {
-      Voice.destroy().then(Voice.removeAllListeners);
-    };
-  }, [inputField]); // Depend on inputField to reconfigure listeners when it changes
-
+  // Clean up
+  return () => {
+    Voice.destroy().then(Voice.removeAllListeners);
+  };
+}, [inputField]); // Keep inputField dependency
   // Reset voice recognition when screen gains focus
+  // Replace your current useFocusEffect with this
   useFocusEffect(
     useCallback(() => {
       // Reset voice state when returning to this screen
@@ -217,13 +223,33 @@ const TrainsBetweenStations = () => {
         if (isListening) {
           Voice.cancel();
         }
+        Voice.destroy().then(() => console.log('Voice destroyed on screen unfocus'));
         Tts.stop();
       };
-    }, [isListening, screenReaderActive])
+    }, [screenReaderActive]) // Remove isListening from dependencies
   );
 
   const startListening = async (field) => {
     try {
+      // If already listening for the same field, cancel and restart
+      if (isListening && inputField === field) {
+        await Voice.cancel();
+        setIsListening(false);
+        
+        // Short delay before restarting
+        setTimeout(() => {
+          setInputField(field);
+          setIsListening(true);
+          
+          Voice.start("en-US").catch(error => {
+            console.error("Voice recognition restart error:", error);
+            setIsListening(false);
+            announce("Voice recognition failed to restart. Please try again.");
+          });
+        }, 500);
+        return;
+      }
+      
       // Cancel any ongoing voice recognition
       if (isListening) {
         await Voice.cancel();
@@ -234,13 +260,7 @@ const TrainsBetweenStations = () => {
       setIsListening(true);
       
       // Provide guidance based on the field
-      if (field === "from") {
-        announce("Please say your departure station.");
-      } else if (field === "to") {
-        announce("Please say your destination station.");
-      } else if (field === "date") {
-        announce("Please say a date in the format day, month, and year. For example, 11 January 2025.");
-      }
+      
       
       // Start voice recognition after a short delay
       setTimeout(() => {
@@ -257,6 +277,7 @@ const TrainsBetweenStations = () => {
       announce("There was a problem with voice recognition. Please try again.");
     }
   };
+
 
   const fetchTrains = async () => {
     try {
@@ -335,6 +356,7 @@ const TrainsBetweenStations = () => {
     return null;
   };
 
+
   // Create header component for FlatList
   const ListHeaderComponent = () => (
     <>
@@ -346,14 +368,16 @@ const TrainsBetweenStations = () => {
       <View style={styles.inputContainer}>
         <Text style={styles.inputLabel}>From Station</Text>
         <TextInput 
+          
           placeholder="Enter departure station" 
           value={from} 
           onChangeText={setFrom} 
           style={styles.textInput}
           placeholderTextColor="#666"
-          accessible={true}
+          // accessible={true}
           accessibilityLabel="From station input"
           accessibilityHint="Enter departure station code or name"
+          
         />
         <TouchableOpacity 
           style={[styles.voiceButton, isListening && inputField === "from" ? styles.listeningButton : null]}
