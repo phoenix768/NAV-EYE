@@ -168,13 +168,13 @@ const styles = StyleSheet.create({
   },
   button: {
     backgroundColor: '#007BFF', // Blue background color
-    paddingVertical: 15, // More vertical padding for a bigger button
+    paddingVertical: 40, // More vertical padding for a bigger button
     paddingHorizontal: 30, // Horizontal padding for a wider button
     borderRadius: 30, // Rounded corners for a smooth look
     marginTop: 20, // Space from top
     alignSelf: 'center', // Center the button horizontally
     width: '80%', // Adjustable width
-    elevation: 5, // Add shadow for Android
+     // Add shadow for Android
   },
   buttonText: {
     color: '#fff', // White text color

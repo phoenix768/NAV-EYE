@@ -44,7 +44,7 @@ const WelcomeScreen = ({ navigation }) => {
           getAddress({ variables: { lat: latitude, lng: longitude } });
         },
         (error) => console.error(error.message),
-        { timeout: 20000 }
+        { timeout:20000}
       );
     };
 

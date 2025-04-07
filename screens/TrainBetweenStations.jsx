@@ -17,6 +17,8 @@ import DatePicker from "react-native-date-picker";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import Voice from "@react-native-voice/voice";
 import Tts from "react-native-tts";
+import { IP_ADDRESS } from '@env';
+
 
 const TrainsBetweenStations = () => {
   const [from, setFrom] = useState("");
@@ -285,7 +287,7 @@ useEffect(() => {
       
       const formattedDate = formatDateForAPI(date);
       const response = await fetch(
-        `http://172.20.13.109:3000/trains/getTrainOn?from=${from}&to=${to}&date=${formattedDate}`
+        `http://${IP_ADDRESS}:3000/trains/getTrainOn?from=${from}&to=${to}&date=${formattedDate}`
       );
       const data = await response.json();
       
@@ -582,7 +584,7 @@ const styles = StyleSheet.create({
   },
   dateButton1: {
     backgroundColor: '#4682b4',
-    paddingVertical: 15,
+    paddingVertical: 45,
     paddingHorizontal: 10,
     borderRadius: 8,
     alignItems: 'center',
@@ -590,7 +592,7 @@ const styles = StyleSheet.create({
   },
   dateButton: {
     backgroundColor: '#4682b4',
-    paddingVertical: 15,
+    paddingVertical: 45,
     paddingHorizontal: 10,
     borderRadius: 8,
     alignItems: 'center',
@@ -599,25 +601,27 @@ const styles = StyleSheet.create({
   dateButtonText: {
     color: 'white',
     fontWeight: 'bold',
-    fontSize: 16,
+    fontSize: 25,
+
+
   },
   voiceButton: {
     backgroundColor: '#d2691e',
-    paddingVertical: 15,
+    paddingVertical: 45,
     borderRadius: 8,
     alignItems: 'center',
   },
   voiceButtonText: {
     color: 'white',
     fontWeight: 'bold',
-    fontSize: 16,
+    fontSize: 25,
   },
   listeningButton: {
     backgroundColor: '#ff4500',
   },
   searchButton: {
     backgroundColor: '#2e8b57',
-    paddingVertical: 15,
+    paddingVertical: 45,
     borderRadius: 8,
     alignItems: 'center',
     marginBottom: 25,
@@ -625,7 +629,7 @@ const styles = StyleSheet.create({
   searchButtonText: {
     color: 'white',
     fontWeight: 'bold',
-    fontSize: 18,
+    fontSize: 25,
   },
   resultsHeader: {
     fontSize: 20,

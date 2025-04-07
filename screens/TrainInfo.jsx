@@ -3,6 +3,8 @@ import { View, Text, TextInput, StyleSheet, TouchableOpacity, FlatList } from "r
 import { useRoute, useFocusEffect, useNavigation } from "@react-navigation/native";
 import Voice from "@react-native-voice/voice";
 import Tts from "react-native-tts";
+import { IP_ADDRESS } from '@env';
+
 
 const TrainInfo = () => {
   const route = useRoute();
@@ -57,7 +59,7 @@ const TrainInfo = () => {
     setIsLoading(true);
     try {
       const response = await fetch(
-        `http://172.20.13.109:3000/trains/getTrain?trainNo=${trainNo}`
+        `http://${IP_ADDRESS}:3000/trains/getTrain?trainNo=${trainNo}`
       );
       const data = await response.json();
       console.log("Train Info:", data);
@@ -74,8 +76,9 @@ const TrainInfo = () => {
     if (!trainNo) return;
     
     try {
+      
       const response = await fetch(
-        `http://172.20.13.109:3000/trains/getRoute?trainNo=${trainNo}`
+        `http://${IP_ADDRESS}:3000/trains/getRoute?trainNo=${trainNo}`
       );
       const data = await response.json();
       console.log("Route Info:", data);

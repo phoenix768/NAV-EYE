@@ -15,9 +15,10 @@ import TrainEnquiry from "./screens/TrainEnquiry";
 import TrainInfo from "./screens/TrainInfo";
 import TrainsBetweenStations from "./screens/TrainBetweenStations";
 import { ApolloClient, InMemoryCache, ApolloProvider } from "@apollo/client";
+import {IP_ADDRESS} from "@env";
 
 const client = new ApolloClient({
-  uri: "http://172.20.13.109:4000/graphql", // Change this to your backend URL if needed
+  uri: `http://${IP_ADDRESS}:4000/graphql`, // Change this to your backend URL if needed
   cache: new InMemoryCache(),
 });
 // const requestLocationPermission = async () => {
@@ -46,7 +47,7 @@ const Stack = createStackNavigator();
 
 const App = () => {
   // useEffect(() => {
-  //   requestLocationPermission();
+    
   // }, []);
 
   return (
