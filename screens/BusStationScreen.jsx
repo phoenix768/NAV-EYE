@@ -28,6 +28,10 @@ const BusStationsScreen = () => {
     fetchPolicy: "network-only",
   });
 
+  useEffect(() => {
+    Tts.speak("You are on the Bus Stations screen. Fetching nearby train stations.");
+  }, []);
+  
   // Request location permission for Android
   const requestLocationPermission = async () => {
     if (Platform.OS === "android") {
@@ -106,8 +110,11 @@ const BusStationsScreen = () => {
 
   useEffect(() => {
     if (data && data.getNearbyStations) {
+      const count = data.getNearbyStations.length;
       if (data.getNearbyStations.length === 0) {
         Tts.speak("No nearby bus stations found.");
+      } else {
+        Tts.speak(`${count} nearby bus station${count > 1 ? "s" : ""} found. To navigate to a certain station either tap on that or press the voice input button and say the full station name`);
       }
     }
   }, [data]);

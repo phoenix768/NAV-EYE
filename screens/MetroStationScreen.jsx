@@ -27,7 +27,11 @@ const MetroStationsScreen = () => {
   const [getNearbyStations, { data, loading, error }] = useLazyQuery(GET_NEARBY_STATIONS, {
     fetchPolicy: "network-only",
   });
-
+  
+  useEffect(() => {
+    Tts.speak("You are on the Metro Stations screen. Fetching nearby train stations.");
+  }, []);
+  
   // Request location permission for Android
   const requestLocationPermission = async () => {
     if (Platform.OS === "android") {
@@ -106,8 +110,11 @@ const MetroStationsScreen = () => {
 
   useEffect(() => {
     if (data && data.getNearbyStations) {
+      const count = data.getNearbyStations.length;
       if (data.getNearbyStations.length === 0) {
         Tts.speak("No nearby metro or subway stations found.");
+      } else {
+        Tts.speak(`${count} nearby metro station${count > 1 ? "s" : ""} found. To navigate to a certain station either tap on that or press the voice input button and say the full station name`);
       }
     }
   }, [data]);

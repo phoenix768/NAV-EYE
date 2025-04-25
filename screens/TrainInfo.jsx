@@ -15,7 +15,9 @@ const TrainInfo = () => {
   const [routeData, setRouteData] = useState(null);
   const [isListening, setIsListening] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-
+  useEffect(() => {
+    Tts.speak("You are on the Train Info screen.Press Speak button and say train number or type the train number in the textbox.");
+  }, []);
   useEffect(() => {
     if (trainNo) {
       getTrainDetails();

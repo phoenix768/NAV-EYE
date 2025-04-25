@@ -1,7 +1,13 @@
-import React from "react";
+import React, { useEffect} from "react";
+import Tts from "react-native-tts";
 import { View, Text, TouchableOpacity, StyleSheet, StatusBar } from "react-native";
 
 const TrainEnquiry = ({ navigation }) => {
+
+  useEffect(() => {
+    Tts.speak("You are on the Train Enquiry screen.Here are 2 buttons provided namely train info and trains between stations.");
+  }, []);
+
   return (
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#faebd7" />

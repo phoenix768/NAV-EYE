@@ -30,7 +30,9 @@ const TrainsBetweenStations = () => {
   const [inputField, setInputField] = useState(null);
   const [screenReaderActive, setScreenReaderActive] = useState(false);
   const navigation = useNavigation();
-
+  useEffect(() => {
+    Tts.speak("You are on the Train Between stations screen.Provide destination and departure stations along with date with the help of voice input buttons");
+  }, []);
   // Check if screen reader is enabled
   useEffect(() => {
     const checkScreenReader = async () => {
@@ -295,7 +297,7 @@ useEffect(() => {
       setTrains(trainsData);
       
       if (trainsData.length > 0) {
-        announce(`Found ${trainsData.length} trains from ${from} to ${to} on ${formatDateForSpeech(date)}. Swipe to explore the results.`);
+        announce(`Found ${trainsData.length} trains from ${from} to ${to} on ${formatDateForSpeech(date)}. Swipe to explore the results.Press the train if you want to know its details.`);
       } else {
         announce(`No trains found from ${from} to ${to} on ${formatDateForSpeech(date)}. Please try different stations or date.`);
       }
